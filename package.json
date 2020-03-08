@@ -4,11 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "ts-node src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "opencv4nodejs": "^5.5.0",
+    "ts-node": "^8.6.2",
     "typescript": "^3.8.3"
   }
 }
