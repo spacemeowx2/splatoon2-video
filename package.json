@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "make-template": "ts-node src/make-template.ts",
     "start": "ts-node src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

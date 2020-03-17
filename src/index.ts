@@ -1,25 +1,87 @@
-import { VideoCapture, imshow, waitKey, Mat, Rect } from 'opencv4nodejs'
+import { VideoCapture, Mat, imwrite, imread, Vec3 } from 'opencv4nodejs'
+import { preProcess, getSkills, binary } from './common'
 
-
-function getRegion(img: Mat, rect: [number, number, number, number]) {
-    const [ X, Y, W, H ] = rect
-    const [ h, w ] = img.sizes
-    const mat = img.getRegion(new Rect(w * X, h * Y, w * W, h * H))
-    return mat
+const Specials = [
+    'InkStorm',
+    'AutobombLauncher',
+    'BooyahBomb',
+    'SuctionBombLauncher',
+    'TentaMissiles',
+    'Splashdown',
+    'StingRay',
+    'SplatBombLauncher',
+    'Baller',
+    'InkArmor',
+    'UltraStamp',
+    'CurlingBombLauncher',
+    'BubbleBlower',
+    'BurstBombLauncher',
+    'InkJet',
+]
+const Subs = [
+    'Autobomb',    'BurstBomb',
+    'CurlingBomb', 'FizzyBomb',
+    'InkMine',     'PointSensor',
+    'SplashWall',  'SplatBomb',
+    'Sprinkler',   'SquidBeakon',
+    'SuctionBomb', 'Torpedo',
+    'ToxicMist'
+]
+function loadImg(folder: string, name: string) {
+    return imread(`template/${folder}/${name}.png`)
+}
+type TemplateType = 'special' | 'sub'
+const Template = {
+    special: Object.fromEntries(Specials.map(i => [i, loadImg('special', i)])) as Record<string, Mat>,
+    sub: Object.fromEntries(Subs.map(i => [i, loadImg('sub', i)])) as Record<string, Mat>,
+}
+const Mask = {
+    special: binary(loadImg('special', 'mask')),
+    sub: binary(loadImg('sub', 'mask')),
 }
 
-function getSkills(img: Mat) {
-    const skills = getRegion(img, [ 0.87, 0.013888888, 0.11, 0.2 ])
-    const sub = getRegion(skills, [ 0.056, 0.0555555555, 0.34, 0.3125 ])
-    const special = getRegion(skills, [ 0.2837, 0.27778, 0.4397, 0.416667 ])
-    return [sub, special]
+async function mse(mask: Mat, template: Mat, img: Mat) {
+    const [ h, w ] = template.sizes
+
+    const t = preProcess(template).copy(mask)
+    const i = preProcess(img).copy(mask)
+
+    // imwrite('t.png', t)
+    // imwrite('i.png', i)
+
+    const r = t.sub(i)
+    const s: Vec3 | number = r.hMul(r).sum() as any
+    if (typeof s === 'number') {
+        return s / (h * w)
+    } else {
+        return s.div(h * w).norm()
+    }
+}
+
+async function match(template: TemplateType, img: Mat) {
+    const result: Record<string, number> = {}
+
+    const mask = Mask[template]
+    for (const [key, t] of Object.entries(Template[template])) {
+        result[key] = await mse(mask, t, img)
+    }
+    const min = Object.entries(result).reduce(([pk, pv], [ck, cv]) => cv < pv ? [ck, cv] : [pk, pv], ['unknown', Infinity])
+
+    // console.log(result)
+    return min
 }
 
 async function main([ filename ]: string[]) {
     const vc = new VideoCapture(filename)
-    const [ sub, special ] = getSkills(await vc.readAsync())
-    const result = await sub.cannyAsync(2, 20)
-    imshow('fuck', special)
-    waitKey()
+
+    for (let i = 0; i < 100; i++) {
+        const [ sub, special ] = getSkills(await vc.readAsync())
+        console.log(await match('special', special))
+        console.log(await match('sub', sub))
+    }
+    // const result = await special.cannyAsync(3, 20)
+    // // result.matchTemplateAsync()
+    // imshow('fuck', special)
+    // waitKey()
 }
 main(process.argv.slice(2)).catch(err => console.error(err))
