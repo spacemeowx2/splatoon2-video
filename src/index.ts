@@ -1,5 +1,7 @@
 import { VideoCapture, Mat, imwrite, imread, Vec3 } from 'opencv4nodejs'
-import { preProcess, getSkills, binary } from './common'
+import { preProcess, getSkills, binary, videoCapture, walkDir, mkdirp } from './common'
+import { basename, join } from 'path'
+import { promises as fs } from 'fs'
 
 const Specials = [
     'InkStorm',
@@ -71,17 +73,42 @@ async function match(template: TemplateType, img: Mat) {
     return min
 }
 
-async function main([ filename ]: string[]) {
+async function detectVideo(filename: string, skipFrame = 30) {
     const vc = new VideoCapture(filename)
+    const result: Record<string, number> = {}
 
-    for (let i = 0; i < 100; i++) {
-        const [ sub, special ] = getSkills(await vc.readAsync())
-        console.log(await match('special', special))
-        console.log(await match('sub', sub))
+    for await (const img of videoCapture(vc, skipFrame)) {
+        const [ subImg, specialImg ] = getSkills(img)
+        const [ special ] = await match('special', specialImg)
+        const [ sub ] = await match('sub', subImg)
+        const key = `${sub}_${special}`
+        result[key] = (result[key] ?? 0) + 1
     }
-    // const result = await special.cannyAsync(3, 20)
-    // // result.matchTemplateAsync()
-    // imshow('fuck', special)
-    // waitKey()
+
+    const max = Object.entries(result).reduce(([pk, pv], [ck, cv]) => cv > pv ? [ck, cv] : [pk, pv], ['unknown', -Infinity])
+
+    return max
+}
+
+const SwitchVideoRE = /\d{16}-[0-9A-F]{32}.mp4/
+async function main([ inpath, outpath ]: string[]) {
+    const copyPromise: Promise<void>[] = []
+    const out = outpath || 'out'
+    await mkdirp(out)
+
+    for await (const filename of walkDir(inpath)) {
+        const fn = basename(filename)
+        if (SwitchVideoRE.test(fn)) {
+            const [result, score] = await detectVideo(filename, 30 * 5)
+            console.log(fn, result, score)
+
+            const outDir = join(out, result)
+            await mkdirp(outDir)
+            copyPromise.push(fs.copyFile(filename, join(outDir, fn)))
+        }
+    }
+
+    await Promise.all(copyPromise)
+    console.log('Copy done')
 }
 main(process.argv.slice(2)).catch(err => console.error(err))
