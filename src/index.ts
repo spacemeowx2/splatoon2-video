@@ -99,7 +99,7 @@ async function main([ inpath, outpath ]: string[]) {
     for await (const filename of walkDir(inpath)) {
         const fn = basename(filename)
         if (SwitchVideoRE.test(fn)) {
-            const [result, score] = await detectVideo(filename, 30 * 5)
+            const [result, score] = await detectVideo(filename, 30 * 3)
             console.log(fn, result, score)
 
             const outDir = join(out, result)
