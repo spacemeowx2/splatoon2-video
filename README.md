@@ -13,3 +13,11 @@ $env:OPENCV_LIB_DIR="C:\tools\opencv\build\x64\vc15\lib"
 $env:OPENCV_BIN_DIR="C:\tools\opencv\build\x64\vc15\bin"
 yarn
 ```
+
+## Usage
+
+```
+npm start switch-video-folder [out-folder]
+```
+
+out-folder is optional, default to ./out/
