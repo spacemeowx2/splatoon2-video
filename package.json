@@ -13,14 +13,14 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "opencv4nodejs": "^5.5.0",
-    "ts-node": "^8.6.2",
-    "typescript": "^3.8.3",
     "@babel/core": "^7.8.7",
     "@babel/preset-env": "^7.8.7",
     "@babel/preset-react": "^7.8.3",
     "@babel/preset-typescript": "^7.8.3",
+    "@nodegui/nodegui": "^0.15.2",
     "@nodegui/packer": "^1.4.0",
+    "@nodegui/qode": "^2.0.4",
+    "@nodegui/react-nodegui": "^0.5.0",
     "@types/node": "^13.9.0",
     "@types/react": "^16.9.23",
     "@types/webpack-env": "^1.15.1",
@@ -29,10 +29,11 @@
     "file-loader": "^5.1.0",
     "fork-ts-checker-webpack-plugin": "^4.0.5",
     "native-addon-loader": "^2.0.1",
+    "opencv4nodejs": "^5.5.0",
+    "react": "^16.13.0",
+    "ts-node": "^8.6.2",
+    "typescript": "^3.8.3",
     "webpack": "^4.42.0",
-    "webpack-cli": "^3.3.11",
-    "@nodegui/nodegui": "^0.15.2",
-    "@nodegui/react-nodegui": "^0.5.0",
-    "react": "^16.13.0"
+    "webpack-cli": "^3.3.11"
   }
 }
