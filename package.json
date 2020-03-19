@@ -8,7 +8,7 @@
     "build": "webpack -p",
     "dev": "webpack --mode=development",
     "start": "qode ./dist/index.js",
-    "debug": "qode --inspect ./dist/index.js"
+    "debug": "qode --inspect-brk ./dist/index.js"
   },
   "author": "",
   "license": "MIT",

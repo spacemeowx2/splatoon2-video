@@ -36,13 +36,23 @@ module.exports = (env, argv) => {
           use: [
             {
               loader: "native-addon-loader",
-              options: { name: "[name]-[hash].[ext]" }
+              options: { name: "[name].[ext]" }
             }
           ]
         }
       ]
     },
-    plugins: [new CleanWebpackPlugin()],
+    plugins: [
+      // new webpack.NormalModuleReplacementPlugin(
+      //   /cv\.js/,
+      //   '../../../workaround/cv.js'
+      // ),
+      new webpack.NormalModuleReplacementPlugin(
+        /opencv4nodejs\.js/,
+        '../../../workaround/opencv4nodejs.js'
+      ),
+      new CleanWebpackPlugin(),
+    ],
     resolve: {
       extensions: [".tsx", ".ts", ".js", ".jsx", ".json"]
     }

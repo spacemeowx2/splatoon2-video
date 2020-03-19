@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs'
 import { join } from 'path'
 import { Mat, Rect, COLOR_BGR2GRAY, Vec2, THRESH_BINARY_INV, VideoCapture, CAP_PROP_FRAME_COUNT, CAP_PROP_POS_FRAMES } from 'opencv4nodejs'
+import { QFileDialog, FileMode } from '@nodegui/nodegui'
 
 export function binary(img: Mat) {
   return img.cvtColor(COLOR_BGR2GRAY).threshold(127, 255, THRESH_BINARY_INV)
@@ -60,4 +61,14 @@ export async function mkdirp(path: string) {
     }
     throw err
   }
+}
+
+export function selectFolder() {
+  const fileDialog = new QFileDialog()
+  fileDialog.setFileMode(FileMode.Directory)
+  fileDialog.exec()
+
+  const [selectedFolder] = fileDialog.selectedFiles()
+
+  return selectedFolder
 }

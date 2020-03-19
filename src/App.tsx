@@ -1,14 +1,19 @@
 import React from 'react'
-import { Text, Window, hot, View } from '@nodegui/react-nodegui'
+import {  Window, hot, } from '@nodegui/react-nodegui'
+import { Main } from './Main'
 
-export const App: React.FC = ({}) => {
-  return <>
-    <Window
-      windowTitle='Splatoon2 Video'
-    >
-      <View>
-        <Text>Welcome to NodeGui 🐕</Text>
-      </View>
-    </Window>
-  </>
+const minSize = { width: 500, height: 520 }
+class App extends React.Component {
+  render() {
+    return <>
+      <Window
+        windowTitle='Splatoon2 Video'
+        minSize={minSize}
+      >
+        <Main />
+      </Window>
+    </>
+  }
 }
+
+export const HotApp = hot(App)
