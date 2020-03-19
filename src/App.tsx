@@ -2,7 +2,7 @@ import React from 'react'
 import {  Window, hot, } from '@nodegui/react-nodegui'
 import { Main } from './Main'
 
-const minSize = { width: 500, height: 520 }
+const minSize = { width: 500, height: 400 }
 class App extends React.Component {
   render() {
     return <>

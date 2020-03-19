@@ -1,5 +1,5 @@
 import { VideoCapture, Mat, imwrite, imread, Vec3 } from 'opencv4nodejs'
-import { preProcess, getSkills, binary, videoCapture, walkDir, mkdirp } from './common'
+import { preProcess, getSkills, binary, videoCapture, walkDir, mkdirp, copyFile } from './common'
 import { basename, join } from 'path'
 import { promises as fs } from 'fs'
 
@@ -90,25 +90,68 @@ async function detectVideo(filename: string, skipFrame = 30) {
   return max
 }
 
+export interface CallbackContent {
+  totalFileCount: number
+  totalOutFileCount: number
+  validFileCount: number
+  detectedVideo: number
+  copyCount: number
+  skipCount: number
+  totalCopyCount: number
+}
 const SwitchVideoRE = /\d{16}-[0-9A-F]{32}.mp4/
-async function main([ inpath, outpath ]: string[]) {
+export async function detect(inpath: string, outpath: string, callback: (count: CallbackContent) => Promise<void>) {
   const copyPromise: Promise<void>[] = []
   const out = outpath || 'out'
+  let count: CallbackContent = {
+    totalFileCount: 0,
+    totalOutFileCount: 0,
+    validFileCount: 0,
+    detectedVideo: 0,
+    copyCount: 0,
+    skipCount: 0,
+    totalCopyCount: 0,
+  }
+  const cb = (cnt: Partial<CallbackContent>) => {
+    count = {
+      ...count,
+      ...cnt
+    }
+    return callback(count)
+  }
   await mkdirp(out)
 
+  let list: string[] = []
+  let existList: string[] = []
   for await (const filename of walkDir(inpath)) {
-    const fn = basename(filename)
-    if (SwitchVideoRE.test(fn)) {
-      const [result, score] = await detectVideo(filename, 30 * 3)
-      console.log(fn, result, score)
+    list.push(filename)
+  }
+  for await (const filename of walkDir(outpath)) {
+    existList.push(filename)
+  }
+  existList = existList.map(i => basename(i))
 
-      const outDir = join(out, result)
-      await mkdirp(outDir)
-      copyPromise.push(fs.copyFile(filename, join(outDir, fn)))
-    }
+  await cb({ totalFileCount: list.length })
+  await cb({ totalOutFileCount: existList.length })
+
+  list = list.filter(fn => SwitchVideoRE.test(basename(fn)))
+  await cb({ validFileCount: list.length })
+  list = list.filter(fn => !existList.includes(basename(fn)))
+  await cb({ skipCount: count.validFileCount - list.length })
+
+  for await (const filename of list) {
+    const fn = basename(filename)
+    const [result, score] = await detectVideo(filename, 30 * 3)
+    await cb({ detectedVideo: count.detectedVideo + 1 })
+    await cb({ totalCopyCount: count.totalCopyCount + 1 })
+    console.log(fn, result, score)
+
+    const outDir = join(out, result)
+    await mkdirp(outDir)
+    copyPromise.push(fs.copyFile(filename, join(outDir, fn)).then((copied) => cb({ copyCount: count.copyCount + 1 })))
   }
 
   await Promise.all(copyPromise)
   console.log('Copy done')
 }
-main(process.argv.slice(2)).catch(err => console.error(err))
+// main(process.argv.slice(2)).catch(err => console.error(err))

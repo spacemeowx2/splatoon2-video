@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs'
 import { join } from 'path'
 import { Mat, Rect, COLOR_BGR2GRAY, Vec2, THRESH_BINARY_INV, VideoCapture, CAP_PROP_FRAME_COUNT, CAP_PROP_POS_FRAMES } from 'opencv4nodejs'
-import { QFileDialog, FileMode } from '@nodegui/nodegui'
+import { QFileDialog, FileMode, QMessageBox, QPushButton, ButtonRole } from '@nodegui/nodegui'
 
 export function binary(img: Mat) {
   return img.cvtColor(COLOR_BGR2GRAY).threshold(127, 255, THRESH_BINARY_INV)
@@ -71,4 +71,25 @@ export function selectFolder() {
   const [selectedFolder] = fileDialog.selectedFiles()
 
   return selectedFolder
+}
+
+export function messageBox(message: string) {
+  const messageBox = new QMessageBox()
+  messageBox.setText(message)
+  const accept = new QPushButton()
+  accept.setText('关闭')
+  messageBox.addButton(accept, ButtonRole.AcceptRole)
+  messageBox.exec()
+}
+
+export function sleep(ms: number = 0) {
+  return new Promise(res => setTimeout(res, ms))
+}
+
+export async function copyFile(source: string, dest: string): Promise<boolean> {
+  if ((await fs.stat(dest)).isFile()) {
+    return false
+  }
+  await fs.copyFile(source, dest)
+  return true
 }
