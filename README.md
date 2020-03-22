@@ -23,9 +23,9 @@ npm start switch-video-folder [out-folder]
 
 out-folder is optional, default to ./out/
 
-## Before pack
+## Pack
 
 ```
-npm rebuild --nodedir=./node_modules/@nodegui/qode/ opencv4nodejs
-yarn --nodedir=./node_modules/@nodegui/qode/ --force
+npm run build
+npx nodegui-packer --pack ./dist
 ```
